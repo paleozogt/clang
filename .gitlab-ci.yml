@@ -4,6 +4,7 @@ before_script:
 
 variables:
     LLVM_VERSION: 6.0.1
+    PACKAGE_VERSION: 0
     CLANG_SRC_URL: https://releases.llvm.org/$LLVM_VERSION/cfe-$LLVM_VERSION.src.tar.xz
     PYTHON_PATH: /opt/python/cp27-cp27mu/bin:$PATH
 
@@ -34,7 +35,7 @@ variables:
     cp -r cfe-$LLVM_VERSION.src/bindings/python/examples examples
     cp -r cfe-$LLVM_VERSION.src/bindings/python/tests tests
     cp README.md setup
-    echo "$LLVM_VERSION" > setup/version.txt
+    echo "$LLVM_VERSION.$PACKAGE_VERSION" > setup/version.txt
 
 .whlcommands: &whlcommands |
     pip install setuptools==40.0.0 wheel==0.31.1
