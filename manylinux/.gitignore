@@ -1,0 +1,6 @@
+*.tar*
+*.zip
+*.src
+cmake*
+llvm-*
+build_*
