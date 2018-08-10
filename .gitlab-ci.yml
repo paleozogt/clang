@@ -4,7 +4,7 @@ before_script:
 
 variables:
     LLVM_VERSION: 6.0.1
-    PACKAGE_VERSION: 0
+    PACKAGE_VERSION: "0"
     CLANG_SRC_URL: https://releases.llvm.org/$LLVM_VERSION/cfe-$LLVM_VERSION.src.tar.xz
     PYTHON_PATH: /opt/python/cp27-cp27mu/bin:$PATH
 
