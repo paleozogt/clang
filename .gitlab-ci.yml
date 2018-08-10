@@ -1,19 +1,26 @@
+variables:
+    LLVM_VERSION: 6.0.1
+    PACKAGE_VERSION: "0"
+    PYTHON_PATH: /opt/python/cp27-cp27mu/bin:$PATH
+
 before_script:
     # pip is sensitive to internet glitches
     - export PIP_DEFAULT_TIMEOUT=120
 
-variables:
-    LLVM_VERSION: 6.0.1
-    PACKAGE_VERSION: "0"
-    CLANG_SRC_URL: https://releases.llvm.org/$LLVM_VERSION/cfe-$LLVM_VERSION.src.tar.xz
-    PYTHON_PATH: /opt/python/cp27-cp27mu/bin:$PATH
+    # make sure we use the right python
+    - export PATH=$PYTHON_PATH:$PATH
+
+    - echo LLVM_VERSION=$LLVM_VERSION
+    - echo PACKAGE_VERSION=$PACKAGE_VERSION
+    - set -x
+    - if [ "$LLVM_VERSION.$PACKAGE_VERSION" != `cat version.txt` ]; then echo "CI versions don't match version.txt"; exit 1; fi
 
 .artifacts: &artifacts
     artifacts:
         name: "$CI_JOB_NAME"
         expire_in: 1 wk
         paths:
-            - setup/dist/*.whl
+            - dist/*.whl
             - examples/*
             - tests/*
 
@@ -23,33 +30,17 @@ variables:
     stage: build
     <<: *artifacts
 
-.basecommands: &basecommands |
-    yum -y install xz
-    export PATH=$PYTHON_PATH:$PATH
-    echo $LLVM_URL
-    python -c "from urllib import urlretrieve; urlretrieve('$CLANG_SRC_URL', 'cfe-$LLVM_VERSION.src.tar.xz')"
-    unxz *.xz
-    tar xvf cfe-$LLVM_VERSION.src.tar
-    rm -f *.tar
-    cp -r cfe-$LLVM_VERSION.src/bindings/python/clang/* setup/clang
-    cp -r cfe-$LLVM_VERSION.src/bindings/python/examples examples
-    cp -r cfe-$LLVM_VERSION.src/bindings/python/tests tests
-    cp README.md setup
-    echo "$LLVM_VERSION.$PACKAGE_VERSION" > setup/version.txt
-
 .whlcommands: &whlcommands |
-    pip install setuptools==40.0.0 wheel==0.31.1
-    cd setup
     ls -la *
-    python setup.py bdist_wheel --plat-name $CI_JOB_NAME
+    yum install -y xz-devel
+    pip wheel -w dist --build-option --plat-name --build-option $CI_JOB_NAME .
     ls -la dist
     find . -iname \*.whl | xargs unzip -l
 
 .linuxjob: &linuxjob
     <<: *buildjob
     script:
-        - *basecommands
-        - cp /opt/llvm/lib/libclang*so* setup/clang
+        - cp /opt/llvm/lib/libclang*so* clang
         - *whlcommands
 
 manylinux1_x86_64:
@@ -64,13 +55,12 @@ manylinux1_i686:
     <<: *buildjob
     image: quay.io/pypa/manylinux1_x86_64
     script:
-        - *basecommands
         - python -c "from urllib import urlretrieve; urlretrieve('$LLVM_BIN_URL', 'LLVM-$LLVM_VERSION-win64.exe')"
         - yum install -y p7zip p7zip-plugins
         - mkdir LLVM-$LLVM_VERSION-win64 && 7z x LLVM-$LLVM_VERSION-win64.exe -oLLVM-$LLVM_VERSION-win64
-        - find LLVM-$LLVM_VERSION-win64 -iname libclang.dll | xargs -Ifile cp file setup/clang
-        - find LLVM-$LLVM_VERSION-win64 -iname msvc\*.dll | xargs -Ifile cp file setup/clang
-        - find LLVM-$LLVM_VERSION-win64 -iname vcruntime\*.dll | xargs -Ifile cp file setup/clang
+        - find LLVM-$LLVM_VERSION-win64 -iname libclang.dll | xargs -Ifile cp file clang
+        - find LLVM-$LLVM_VERSION-win64 -iname msvc\*.dll | xargs -Ifile cp file clang
+        - find LLVM-$LLVM_VERSION-win64 -iname vcruntime\*.dll | xargs -Ifile cp file clang
         - *whlcommands
 
 win32:
@@ -89,10 +79,9 @@ macosx_10_11_x86_64:
     variables:
         LLVM_BIN_URL: https://homebrew.bintray.com/bottles/llvm-$LLVM_VERSION.el_capitan.bottle.tar.gz
     script:
-        - *basecommands
         - python -c "from urllib import urlretrieve; urlretrieve('$LLVM_BIN_URL', 'llvm-$LLVM_VERSION.el_capitan.bottle.tar.gz')"
         - tar xvf *.tar.gz
-        - cp llvm/$LLVM_VERSION/lib/libclang.dylib setup/clang
+        - cp llvm/$LLVM_VERSION/lib/libclang.dylib clang
         - *whlcommands
 
 ##### test
@@ -102,7 +91,7 @@ macosx_10_11_x86_64:
     <<: *artifacts
     script:
         - apt-get update && apt-get install -y python python-pip
-        - pip install setup/dist/*$WHEEL_PLAT.whl
+        - pip install dist/*$WHEEL_PLAT.whl
         - python -m unittest discover
 
 test_linux_x86_64:
@@ -123,4 +112,4 @@ collect:
     stage: deploy
     <<: *artifacts
     script:
-        - ls -l setup/dist/*.whl
+        - ls -l dist/*.whl
