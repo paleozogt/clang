@@ -1,14 +1,22 @@
 from setuptools import setup, dist
 from os import path, mkdir
-from urllib import urlretrieve
 from shutil import copy, copytree, rmtree
 from distutils.dir_util import copy_tree
 from glob import glob
 import sys
 
 import contextlib
-import lzma
 import tarfile
+
+try:
+    import lzma
+except ImportError:
+    from backports import lzma
+
+try:
+    from urllib.request import urlretrieve
+except ImportError:
+    from urllib import urlretrieve
 
 if sys.version_info < (3, 0, 0):
     from io import open  # python 2 builtin open doesn't have an encoding option

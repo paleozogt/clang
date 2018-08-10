@@ -1,2 +1,2 @@
 [build-system]
-requires = ["setuptools", "wheel", "pyliblzma"]
+requires = ["setuptools", "wheel", "backports.lzma"]
