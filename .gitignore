@@ -108,6 +108,9 @@ venv.bak/
 # gitlab-runner
 builds
 
+# pychar
+.idea
+
 examples
 tests
 *.src*
