@@ -24,6 +24,8 @@ before_script:
     script:
         - ls -la *
         - pip wheel -v -w dist $PIP_ARGS .
+        - ls -la examples
+        - ls -la tests
         - ls -la dist
         - find . -iname \*.whl | xargs unzip -l
 
@@ -58,7 +60,7 @@ macosx_10_11_x86_64:
     script:
         - apt-get install -y python python-pip
         - pip install clang --no-index --find-links file://$PWD/dist
-        - python -m unittest discover
+        - python -m unittest discover -s tests/cindex
 
 test_linux_x86_64:
     image: ubuntu:16.04
