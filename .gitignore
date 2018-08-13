@@ -115,3 +115,6 @@ examples
 tests
 *.src*
 *.whl
+*.zip
+*.exe
+*.tar*
