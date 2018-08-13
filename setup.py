@@ -55,12 +55,12 @@ def get_archive_extract_dir(archive_path):
             path_set.add(path.join(entry.pathname.split('/')[0], ''))
 
     if len(path_set) is 1:
-        return iter(path_set).next()
+        return next(iter(path_set))
     else:
         return ""
 
 def extract_archive(archive_path):
-    print "extracting %s" % archive_path
+    print("extracting %s" % archive_path)
     archive_ext = path.splitext(archive_path)[1]
 
     if archive_ext == '.exe':
@@ -69,13 +69,13 @@ def extract_archive(archive_path):
         # sadly there's no support for NSIS installer extraction in python,
         # so we have to lean on the 7z tool
         cmd = ["7z", "x", archive_path, "-o"+extract_path]
-        print ' '.join(cmd)
+        print(' '.join(cmd))
         call(cmd)
     else:
         extract_path = get_archive_extract_dir(archive_path)
         with libarchive.public.file_reader(archive_path) as a:
             for entry in a:
-                print "\t %s" % (entry.pathname)
+                print("\t %s" % (entry.pathname))
                 if entry.size == 0:
                     mkdir_p(entry.pathname)
                 else:
@@ -89,7 +89,7 @@ def download_clang_src():
     clang_src="cfe-%s.src" % llvm_version
     clang_src_archive="%s.tar.xz" % clang_src
     clang_src_url= "https://releases.llvm.org/%s/%s" % (llvm_version, clang_src_archive)
-    print "downloading %s" % clang_src_url
+    print("downloading %s" % clang_src_url)
     urlretrieve(clang_src_url, clang_src_archive)
     extract_archive(clang_src_archive)
 
@@ -106,12 +106,12 @@ def download_clang_src():
 def download_clang_binary(plat_name):
     clang_binary_url = get_clang_binary_url(plat_name)
     clang_binary_file = path.basename(clang_binary_url)
-    print "downloading %s" % clang_binary_url
+    print("downloading %s" % clang_binary_url)
 
     # temp workaround until linux artifacts server can support python downloads
     if "linux" in plat_name:
         cmd= [ "wget", clang_binary_url ]
-        print ' '.join(cmd)
+        print(' '.join(cmd))
         call(cmd)
     else:
         urlretrieve(clang_binary_url, clang_binary_file)
@@ -128,7 +128,7 @@ def download_clang_binary(plat_name):
         clang_files+= glob(clang_binary_dir + "bin/vcruntime*.dll")
 
     for file in clang_files:
-        print "deploying %s" % file
+        print("deploying %s" % file)
         copy(file, 'clang')
 
 clang_binary_urls = {
@@ -158,7 +158,7 @@ def get_clang_binary_url(plat_name):
         return clang_binary_urls["win"]["64"]
 
 def download_deps(plat_name):
-    print "download_deps " + str(plat_name)
+    print("download_deps " + str(plat_name))
     download_clang_src()
     if plat_name:
         download_clang_binary(plat_name)
