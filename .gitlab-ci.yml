@@ -1,19 +1,8 @@
-variables:
-    LLVM_VERSION: 6.0.1
-    PACKAGE_VERSION: "0"
-    PYTHON_PATH: /opt/python/cp27-cp27mu/bin:$PATH
+image: python:2.7
 
 before_script:
     # pip is sensitive to internet glitches
     - export PIP_DEFAULT_TIMEOUT=120
-
-    # make sure we use the right python
-    - export PATH=$PYTHON_PATH:$PATH
-
-    - echo LLVM_VERSION=$LLVM_VERSION
-    - echo PACKAGE_VERSION=$PACKAGE_VERSION
-    - set -x
-    - if [ "$LLVM_VERSION.$PACKAGE_VERSION" != `cat version.txt` ]; then echo "CI versions don't match version.txt"; exit 1; fi
 
 .artifacts: &artifacts
     artifacts:
@@ -29,60 +18,36 @@ before_script:
 .buildjob: &buildjob
     stage: build
     <<: *artifacts
-
-.whlcommands: &whlcommands |
-    ls -la *
-    yum install -y xz-devel
-    pip wheel -w dist --build-option --plat-name --build-option $CI_JOB_NAME .
-    ls -la dist
-    find . -iname \*.whl | xargs unzip -l
-
-.linuxjob: &linuxjob
-    <<: *buildjob
     script:
-        - cp /opt/llvm/lib/libclang*so* clang
-        - *whlcommands
+        - apt-get update
+        - apt-get install -y libarchive-dev p7zip-full zip
+        - ls -la *
+        - pip wheel -v -w dist $PIP_ARGS .
+        - ls -la dist
+        - find . -iname \*.whl | xargs unzip -l
 
-manylinux1_x86_64:
-    <<: *linuxjob
-    image: paleozogt/manylinux1_x86_64_clang:$LLVM_VERSION
+.buildplatjob: &buildplatjob
+    <<: *buildjob
+    variables:
+        PIP_ARGS: --build-option --plat-name --build-option $CI_JOB_NAME
+
+purelib:
+    <<: *buildjob
 
 manylinux1_i686:
-    <<: *linuxjob
-    image: paleozogt/manylinux1_i686_clang:$LLVM_VERSION
+    <<: *buildplatjob
 
-.winjob: &winjob
-    <<: *buildjob
-    image: quay.io/pypa/manylinux1_x86_64
-    script:
-        - python -c "from urllib import urlretrieve; urlretrieve('$LLVM_BIN_URL', 'LLVM-$LLVM_VERSION-win64.exe')"
-        - yum install -y p7zip p7zip-plugins
-        - mkdir LLVM-$LLVM_VERSION-win64 && 7z x LLVM-$LLVM_VERSION-win64.exe -oLLVM-$LLVM_VERSION-win64
-        - find LLVM-$LLVM_VERSION-win64 -iname libclang.dll | xargs -Ifile cp file clang
-        - find LLVM-$LLVM_VERSION-win64 -iname msvc\*.dll | xargs -Ifile cp file clang
-        - find LLVM-$LLVM_VERSION-win64 -iname vcruntime\*.dll | xargs -Ifile cp file clang
-        - *whlcommands
+manylinux1_x86_64:
+    <<: *buildplatjob
 
 win32:
-    <<: *winjob
-    variables:
-        LLVM_BIN_URL: http://releases.llvm.org/$LLVM_VERSION/LLVM-$LLVM_VERSION-win32.exe
+    <<: *buildplatjob
 
 win_amd64:
-    <<: *winjob
-    variables:
-        LLVM_BIN_URL: http://releases.llvm.org/$LLVM_VERSION/LLVM-$LLVM_VERSION-win64.exe
+    <<: *buildplatjob
 
 macosx_10_11_x86_64:
-    <<: *buildjob
-    image: quay.io/pypa/manylinux1_x86_64
-    variables:
-        LLVM_BIN_URL: https://homebrew.bintray.com/bottles/llvm-$LLVM_VERSION.el_capitan.bottle.tar.gz
-    script:
-        - python -c "from urllib import urlretrieve; urlretrieve('$LLVM_BIN_URL', 'llvm-$LLVM_VERSION.el_capitan.bottle.tar.gz')"
-        - tar xvf *.tar.gz
-        - cp llvm/$LLVM_VERSION/lib/libclang.dylib clang
-        - *whlcommands
+    <<: *buildplatjob
 
 ##### test
 
