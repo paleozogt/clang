@@ -55,20 +55,17 @@ macosx_10_11_x86_64:
     stage: test
     <<: *artifacts
     script:
-        - apt-get update && apt-get install -y python python-pip
-        - pip install dist/*$WHEEL_PLAT.whl
+        - apt-get update
+        - apt-get install -y python python-pip
+        - pip install clang --no-index --find-links file://$PWD/dist
         - python -m unittest discover
 
 test_linux_x86_64:
     image: ubuntu:16.04
-    variables:
-        WHEEL_PLAT: manylinux1_x86_64
     <<: *linuxtest
 
 test_linux_i386:
     image: ioft/i386-ubuntu:16.04
-    variables:
-        WHEEL_PLAT: manylinux1_i686
     <<: *linuxtest
 
 ##### deploy
