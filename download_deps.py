@@ -108,8 +108,6 @@ def download_clang_src():
     copy_tree(clang_examples, 'examples')
     copy_tree(clang_tests, 'tests')
 
-    hack_clang_libpath("clang/cindex.py")
-
 def hack_clang_libpath(pyfile):
     # default for set_library_path
     with open(pyfile, "a") as f:
@@ -151,6 +149,7 @@ def download_deps(plat_name):
     print("download_deps " + str(plat_name))
     download_clang_src()
     if plat_name:
+        hack_clang_libpath("clang/cindex.py")
         download_clang_binary(plat_name)
 
 def main():
