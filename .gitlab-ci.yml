@@ -36,7 +36,7 @@ testsrc:
     stage: build
     <<: *artifacts
     script:
-        - pip install libarchive
+        - pip install -r requirements.txt
         - python download_deps.py
         - ls -la examples
         - ls -la tests
