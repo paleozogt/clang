@@ -97,3 +97,5 @@ collect:
     <<: *artifacts
     script:
         - ls -l dist/*.whl
+        - export ARTIFACT_URL=https://gitlab.com/paleozogt/clang/-/jobs/$CI_JOB_ID/artifacts/download
+        - echo $ARTIFACT_URL
