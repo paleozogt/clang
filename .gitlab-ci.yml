@@ -1,7 +1,7 @@
 image: python:2.7
 
 variables:
-    CI_DEBUG_TRACE: "true"
+    ARTIFACT_URL : $CI_JOB_URL/artifacts/download
 
 before_script:
     # pip is sensitive to internet glitches
@@ -64,6 +64,19 @@ macosx_10_11_x86_64:
 
 ##### test
 
+.installtest: &installtest
+    stage: test
+    script:
+        - pip install .
+
+install_py2:
+    image: python:2.7
+    <<: *installtest
+
+install_py3:
+    image: python:3.5
+    <<: *installtest
+
 .linuxtest: &linuxtest
     stage: test
     <<: *artifacts
@@ -80,18 +93,12 @@ test_linux_i386:
     image: ioft/i386-ubuntu:16.04
     <<: *linuxtest
 
-.installtest: &installtest
+test_mac:
     stage: test
+    <<: *artifacts
     script:
-        - pip install .
-
-install_py2:
-    image: python:2.7
-    <<: *installtest
-
-install_py3:
-    image: python:3.5
-    <<: *installtest
+        # sadly there's no mac runners on GitLab cloud, so we delegate to Travis CI
+        - ./trigger-travis.sh
 
 ##### deploy
 
@@ -100,5 +107,3 @@ collect:
     <<: *artifacts
     script:
         - ls -l dist/*.whl
-        - export ARTIFACT_URL=$CI_JOB_URL/artifacts/download
-        - echo $ARTIFACT_URL
