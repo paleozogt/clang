@@ -100,6 +100,13 @@ test_mac:
         # sadly there's no mac runners on GitLab cloud, so we delegate to Travis CI
         - ./trigger-travis.sh
 
+test_win:
+    stage: test
+    <<: *artifacts
+    script:
+        # sadly there's no win runners on GitLab cloud, so we delegate to AppVeyor
+        - ./trigger-appveyor.sh
+
 ##### deploy
 
 collect:

@@ -1,0 +1,10 @@
+build_script:
+    - echo ARTIFACT_URL %ARTIFACT_URL%
+    - curl -L %ARTIFACT_URL% -o artifacts.zip
+    - 7z x artifacts.zip
+    - set PATH=C:\Python27-x64;%PATH%
+    - pip install clang --no-index --find-links file://%cd%\dist
+    - python -m unittest discover
+    - set PATH=C:\Python27;%PATH%
+    - pip install clang --no-index --find-links file://%cd%\dist
+    - python -m unittest discover
