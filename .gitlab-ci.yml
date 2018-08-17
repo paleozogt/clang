@@ -96,16 +96,28 @@ install_py3:
 .linuxtest: &linuxtest
     stage: test
     script:
-        - apt-get install -y python python-pip
-        - pip install clang --no-index --find-links file://$PWD/dist
-        - python -m unittest discover
+        - apt-get install -y python$PYVER python$PYVER-pip
+        - pip$PYVER install clang --no-index --find-links file://$PWD/dist
+        - python$PYVER -m unittest discover
 
-test_linux_x86_64:
+test_linux_py2_x86_64:
     image: ubuntu:16.04
     <<: *linuxtest
 
-test_linux_i386:
+test_linux_py2_i386:
     image: ioft/i386-ubuntu:16.04
+    <<: *linuxtest
+
+test_linux_py3_x86_64:
+    image: ubuntu:16.04
+    variables:
+        PYVER: 3
+    <<: *linuxtest
+
+test_linux_py3_i386:
+    image: ioft/i386-ubuntu:16.04
+    variables:
+        PYVER: 3
     <<: *linuxtest
 
 ##### external CI tests
