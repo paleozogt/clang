@@ -1,10 +1,15 @@
+environment:
+    matrix:
+        - PYTHON_HOME: C:\Python27
+        - PYTHON_HOME: C:\Python27-x64
+        - PYTHON_HOME: C:\Python36
+        - PYTHON_HOME: C:\Python36-x64
+
 build_script:
     - echo ARTIFACT_URL %ARTIFACT_URL%
     - curl -L %ARTIFACT_URL% -o artifacts.zip
     - 7z x artifacts.zip
-    - set PATH=C:\Python27-x64;%PATH%
-    - pip install clang --no-index --find-links file://%cd%\dist
-    - python -m unittest discover
-    - set PATH=C:\Python27;%PATH%
-    - pip install clang --no-index --find-links file://%cd%\dist
-    - python -m unittest discover
+    - echo PYTHON_HOME=%PYTHON_HOME%
+    - set PATH=%PYTHON_HOME%;%PYTHON_HOME%\Scripts;%PATH%
+    - pip install clang -v --no-index --find-links file://%cd%\dist
+    - python -m unittest tests.cindex.test_diagnostics
