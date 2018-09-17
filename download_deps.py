@@ -148,7 +148,7 @@ def download_clang_binary(plat_name):
 def download_deps(plat_name):
     print("download_deps " + str(plat_name))
     download_clang_src()
-    if plat_name:
+    if plat_name and not plat_name == "any":
         hack_clang_libpath("clang/cindex.py")
         download_clang_binary(plat_name)
 

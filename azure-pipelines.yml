@@ -1,0 +1,191 @@
+jobs:
+    - job: ClangSource
+      pool:
+          vmImage: ubuntu-16.04
+      steps:
+          - script: docker run -v$PWD:$PWD -w$PWD --name builder -t -d python:2.7
+          - script: docker exec builder bash -c "apt-get update && apt-get install -y libarchive-dev p7zip-full zip"
+          - script: docker exec builder pip install -r requirements.txt
+          - script: docker exec builder python download_deps.py
+          - script: ls -la examples
+          - script: ls -la tests
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+                artifactName: tests
+                pathtoPublish: tests
+          - task: PublishBuildArtifacts@1
+            inputs:
+                artifactName: examples
+                pathtoPublish: examples
+
+    - job: BuildWheel
+      pool:
+          vmImage: ubuntu-16.04
+      strategy:
+          maxParallel: 10
+          matrix:
+              purelib:
+                  platform: any
+              linux32:
+                  platform: manylinux1_i686
+              linux64:
+                  platform: manylinux1_x86_64
+              win32:
+                  platform: win32
+              win64:
+                  platform: win_amd64
+              macosx:
+                  platform: macosx_10_11_x86_64
+      steps:
+          - script: docker run -v$PWD:$PWD -w$PWD --name builder -t -d python:2.7
+          - script: docker exec builder bash -c "apt-get update && apt-get install -y libarchive-dev p7zip-full zip"
+          - script: docker exec builder pip wheel -v -w dist --build-option --plat-name --build-option $PLATFORM .
+
+          - script: ls -la dist
+          - script: find . -iname \*.whl | xargs unzip -l
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+                artifactName: dist
+                pathtoPublish: dist
+
+    - job: TestWheelUnix
+      pool:
+          vmImage: ubuntu-16.04
+      strategy:
+          maxParallel: 10
+          matrix:
+              py2_32:
+                  container: ioft/i386-ubuntu:16.04
+                  pyver: 
+              py3_32:
+                  container: ioft/i386-ubuntu:16.04
+                  pyver: 3
+              py2_64:
+                  container: ubuntu:16.04
+                  pyver: 
+              py3_64:
+                  container: ubuntu:16.04
+                  pyver: 3
+      steps:
+          - task: DownloadBuildArtifacts@0
+            inputs:
+                artifactName: dist
+                downloadPath: .
+          - task: DownloadBuildArtifacts@0
+            inputs:
+                artifactName: tests
+                downloadPath: .
+          - script: docker run -v$PWD:$PWD -w$PWD --name tester -t -d $CONTAINER
+          - script: docker exec tester bash -c "apt-get update && apt-get install -y python$PYVER python$PYVER-pip"
+          - script: docker exec tester python$PYVER --version
+          - script: docker exec tester python$PYVER -c "import sys; print(sys.maxsize)"
+          - script: docker exec tester pip$PYVER --version
+          - script: docker exec tester pip$PYVER install clang --no-index --find-links file://$PWD/dist
+          - script: docker exec tester python$PYVER -m unittest tests.cindex.test_diagnostics
+      dependsOn:
+          - BuildWheel
+          - ClangSource
+      condition: succeeded()
+
+    - job: TestWheelWin
+      pool:
+          vmImage: vs2017-win2016
+      strategy:
+          maxParallel: 10
+          matrix:
+              py2_32:
+                  pyver: 2.7.14
+                  pyarch: x86
+              py3_32:
+                  pyver: 3.5.4
+                  pyarch: x86
+              py2_64:
+                  pyver: 2.7.14
+                  pyarch: x64
+              py3_64:
+                  pyver: 3.5.4
+                  pyarch: x64
+      steps:
+          - script: echo $Env:PYVER $Env:PYARCH
+          - task: UsePythonVersion@0
+            inputs:
+                versionSpec: '$(pyver)'
+                architecture: '$(pyarch)'
+
+          - script: python --version
+          - script: python -c "import sys; print(sys.maxsize)"
+          - script: pip --version
+
+          - task: DownloadBuildArtifacts@0
+            inputs:
+                artifactName: dist
+                downloadPath: .
+          - task: DownloadBuildArtifacts@0
+            inputs:
+                artifactName: tests
+                downloadPath: .
+
+          - script: pip install clang --no-index --find-links file://%cd%\dist
+          - script: python -m unittest tests.cindex.test_diagnostics
+      dependsOn:
+          - BuildWheel
+          - ClangSource
+      condition: succeeded()
+
+    - job: TestWheelMac
+      pool:
+          vmImage: xcode9-macos10.13
+      strategy:
+          maxParallel: 10
+          matrix:
+              py2_64:
+                  pyver: 2.7.15
+                  pyarch: x64
+              py3_64:
+                  pyver: 3.5.5
+                  pyarch: x64
+      steps:
+          - script: echo $Env:PYVER $Env:PYARCH
+          - task: UsePythonVersion@0
+            inputs:
+                versionSpec: '$(pyver)'
+                architecture: '$(pyarch)'
+
+          - script: python --version
+          - script: python -c "import sys; print(sys.maxsize)"
+          - script: pip --version
+
+          - task: DownloadBuildArtifacts@0
+            inputs:
+                artifactName: dist
+                downloadPath: .
+          - task: DownloadBuildArtifacts@0
+            inputs:
+                artifactName: tests
+                downloadPath: .
+
+          - script: pip install clang --no-index --find-links file://$PWD/dist
+          - script: python -m unittest tests.cindex.test_diagnostics
+      dependsOn:
+          - BuildWheel
+          - ClangSource
+      condition: succeeded()
+
+    # test "pip install" directly from source
+    - job: TestInstallWheel
+      pool:
+          vmImage: ubuntu-16.04
+      strategy:
+          maxParallel: 10
+          matrix:
+              py2:
+                  container: python:2.7
+              py3:
+                  container: python:3.5
+      steps:
+          - script: docker run -v$PWD:$PWD -w$PWD --name builder -t -d $CONTAINER
+          - script: docker exec builder bash -c "apt-get update && apt-get install -y libarchive-dev p7zip-full zip"
+          - script: docker exec builder pip install --user .
+          - script: docker exec builder python -c 'import clang.cindex'

@@ -32,3 +32,5 @@ his many years of work on it!
 In the interest of making my life easier, I have added a pytest.ini and
 modified the tests to run on Windows with a patch I upstreamed to LLVM
 https://reviews.llvm.org/D47864
+
+[![Build Status](https://dev.azure.com/paleozogt/paleozogt/_apis/build/status/paleozogt-CI)](https://dev.azure.com/paleozogt/paleozogt/_build/latest?definitionId=1)
