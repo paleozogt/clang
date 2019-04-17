@@ -3,8 +3,8 @@ cd "$(dirname "$0")"
 set -x
 set -u
 
-ARCH=`uname -p`
 LLVM_VERSION="$1"
+ARCH="$2"
 
 export PATH="/opt/python/cp27-cp27mu/bin:$PWD/cmake_$ARCH/bin:$PATH"
 
