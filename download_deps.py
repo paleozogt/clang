@@ -18,7 +18,10 @@ clang_binary_urls = {
     },
     "linux" : {
         "x86"    : "https://ethanhs.me/static/llvm-%s-Linux-i686.zip" % llvm_version,
-        "x86_64" : "https://ethanhs.me/static/llvm-%s-Linux-x86_64.zip" % llvm_version
+        "x86_64" : "https://ethanhs.me/static/llvm-%s-Linux-x86_64.zip" % llvm_version,
+        "arm64"  : "https://ethanhs.me/static/llvm-%s-Linux-arm64.zip" % llvm_version,
+        "armv6"  : "https://ethanhs.me/static/llvm-%s-Linux-armv6.zip" % llvm_version,
+        "armv7"  : "https://ethanhs.me/static/llvm-%s-Linux-armv7.zip" % llvm_version,
     },
     "win" : {
         "x86"    : "http://releases.llvm.org/%s/LLVM-%s-win32.exe" % (llvm_version, llvm_version),
@@ -29,10 +32,19 @@ clang_binary_urls = {
 def get_clang_binary_url(plat_name):
     if "mac" in plat_name:
         return clang_binary_urls["mac"]["x86_64"]
+
     elif "linux" in plat_name and "i686" in plat_name:
         return clang_binary_urls["linux"]["x86"]
     elif "linux" in plat_name and "x86_64" in plat_name:
         return clang_binary_urls["linux"]["x86_64"]
+
+    elif "linux" in plat_name and "arm64" in plat_name:
+        return clang_binary_urls["linux"]["arm64"]
+    elif "linux" in plat_name and "armv6" in plat_name:
+        return clang_binary_urls["linux"]["armv6"]
+    elif "linux" in plat_name and "armv7" in plat_name:
+        return clang_binary_urls["linux"]["armv7"]
+
     elif "win" in plat_name and "win32" in plat_name:
         return clang_binary_urls["win"]["x86"]
     elif "win" in plat_name and "amd64" in plat_name:
