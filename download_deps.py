@@ -8,12 +8,7 @@ from glob import glob
 from subprocess import call
 import libarchive.public
 from inspect import cleandoc
-
-try:
-    from urllib.request import urlretrieve
-except ImportError:
-    from urllib import urlretrieve
-
+import requests
 
 llvm_version='.'.join(open('version.txt').read().split('.')[:3])
 
@@ -51,6 +46,11 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+def download_file(url, filename):
+    r = requests.get(url, allow_redirects=True)
+    with open(filename, 'wb') as f:
+        f.write(r.content)
 
 def get_archive_extract_dir(archive_path):
     path_set= set()
@@ -95,7 +95,7 @@ def download_clang_src():
     clang_src_archive="%s.tar.xz" % clang_src
     clang_src_url= "https://releases.llvm.org/%s/%s" % (llvm_version, clang_src_archive)
     print("downloading %s" % clang_src_url)
-    urlretrieve(clang_src_url, clang_src_archive)
+    download_file(clang_src_url, clang_src_archive)
     extract_archive(clang_src_archive)
 
     # deploy clang bindings
@@ -128,7 +128,7 @@ def download_clang_binary(plat_name):
         print(' '.join(cmd))
         call(cmd)
     else:
-        urlretrieve(clang_binary_url, clang_binary_file)
+        download_file(clang_binary_url, clang_binary_file)
 
     clang_binary_dir = extract_archive(clang_binary_file)
 
