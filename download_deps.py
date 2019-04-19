@@ -14,29 +14,29 @@ llvm_version='.'.join(open('version.txt').read().split('.')[:3])
 
 clang_binary_urls = {
     "mac" : {
-        "64" : "https://homebrew.bintray.com/bottles/llvm-%s.el_capitan.bottle.tar.gz" % llvm_version
+        "x86_64" : "https://homebrew.bintray.com/bottles/llvm-%s.el_capitan.bottle.tar.gz" % llvm_version
     },
     "linux" : {
-        "32" : "https://ethanhs.me/static/llvm-%s-Linux-i686.zip" % llvm_version,
-        "64" : "https://ethanhs.me/static/llvm-%s-Linux-x86_64.zip" % llvm_version
+        "x86"    : "https://ethanhs.me/static/llvm-%s-Linux-i686.zip" % llvm_version,
+        "x86_64" : "https://ethanhs.me/static/llvm-%s-Linux-x86_64.zip" % llvm_version
     },
     "win" : {
-        "32" : "http://releases.llvm.org/%s/LLVM-%s-win32.exe" % (llvm_version, llvm_version),
-        "64" : "http://releases.llvm.org/%s/LLVM-%s-win64.exe" % (llvm_version, llvm_version)
+        "x86"    : "http://releases.llvm.org/%s/LLVM-%s-win32.exe" % (llvm_version, llvm_version),
+        "x86_64" : "http://releases.llvm.org/%s/LLVM-%s-win64.exe" % (llvm_version, llvm_version)
     }
 }
 
 def get_clang_binary_url(plat_name):
     if "mac" in plat_name:
-        return clang_binary_urls["mac"]["64"]
+        return clang_binary_urls["mac"]["x86_64"]
     elif "linux" in plat_name and "i686" in plat_name:
-        return clang_binary_urls["linux"]["32"]
+        return clang_binary_urls["linux"]["x86"]
     elif "linux" in plat_name and "x86_64" in plat_name:
-        return clang_binary_urls["linux"]["64"]
+        return clang_binary_urls["linux"]["x86_64"]
     elif "win" in plat_name and "win32" in plat_name:
-        return clang_binary_urls["win"]["32"]
+        return clang_binary_urls["win"]["x86"]
     elif "win" in plat_name and "amd64" in plat_name:
-        return clang_binary_urls["win"]["64"]
+        return clang_binary_urls["win"]["x86_64"]
 
 def mkdir_p(path):
     try:
